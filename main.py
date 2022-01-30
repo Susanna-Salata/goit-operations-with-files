@@ -14,7 +14,7 @@ TRANSLATION = (
 file_list = ['D:\\projects\\goit-operations-with-files\\180_days_for_Data_Science.pdf', 'D:\\projects\\goit-operations-with-files\\abc florystyki.pdf', 'D:\\projects\\goit-operations-with-files\\CV_Susanna_Salata_22.01.11.pdf', 'D:\\projects\\goit-operations-with-files\\Презентация для курса Практическое введение в Python для Data Science.pdf', 'D:\\projects\\data\\Susanna_sort\\lesson1.1_jupyter_guide.ipynb', 'D:\\projects\\data\\Susanna_sort\\lesson1.2_datatypes.ipynb', 'D:\\projects\\data\\Susanna_sort\\lesson1.3_loops.ipynb', 'D:\\projects\\data\\Susanna_sort\\lesson1.4_functions.ipynb', 'D:\\projects\\data\\Susanna_sort\\lesson1.5_libraries.ipynb', 'D:\\projects\\data\\Susanna_sort\\lesson1.bonus.ipynb', 'D:\\projects\\data\\Susanna_sort\\lesson1.step_by_step.ipynb', 'D:\\projects\\data\\Susanna_sort\\lesson2.1_datatypes_numpy.ipynb', 'D:\\projects\\data\\Susanna_sort\\lesson2.2_functions_numpy.ipynb', 'D:\\projects\\data\\Susanna_sort\\lesson2.3._pandas.ipynb', 'D:\\projects\\data\\Susanna_sort\\lesson2.4_map_apply.ipynb', 'D:\\projects\\data\\Susanna_sort\\lesson2.5_pandas_continue.ipynb', 'D:\\projects\\data\\Susanna_sort\\lesson2.bonus.ipynb', 'D:\\projects\\data\\Susanna_sort\\lesson2.step_by_step.ipynb', 'D:\\projects\\data\\Susanna_sort\\lesson3.1_pandas_group_by.ipynb', 'D:\\projects\\data\\Susanna_sort\\lesson3.2_crosstab_pivot_table.ipynb', 'D:\\projects\\data\\Susanna_sort\\lesson3.3_pandas_real_dataset.ipynb', 'D:\\projects\\data\\Susanna_sort\\lesson3.4_visualization.ipynb', 'D:\\projects\\data\\Susanna_sort\\lesson3.5_prediction_price.ipynb', 'D:\\projects\\data\\Susanna_sort\\lesson3.bonus.ipynb', 'D:\\projects\\data\\Susanna_sort\\lesson3.step_by_step.ipynb', 'D:\\projects\\data\\Susanna_sort\\Шпаргалка_1_1.jpg', 'D:\\projects\\data\\Susanna_sort\\Шпаргалка_1_2.jpg', 'D:\\projects\\data\\Susanna_sort\\1_Python for DS\\lesson2.5_pandas_continue-checkpoint.ipynb', 'D:\\projects\\data\\Susanna_sort\\1_Python for DS\\lesson3.3_pandas_real_dataset-checkpoint.ipynb', 'D:\\projects\\data\\Susanna_sort\\1_Python for DS\\lesson3.4_visualization-checkpoint.ipynb', 'D:\\projects\\data\\Susanna_sort\\1_Python for DS\\lesson3.5_prediction_price-checkpoint.ipynb', 'D:\\projects\\data\\Susanna_sort\\1_Python for DS\\.ipynb_checkpoints\\DW_Gym_day1.ipynb', 'D:\\projects\\data\\Susanna_sort\\3_Python_DW_Gym\\Barbara_Oakli_--_Dumay_kak_matematik.fb2', 'D:\\projects\\data\\Susanna_sort\\3_Python_DW_Gym\\Individualnyy_plan_razvitiya_studenta_Susanna.docx', 'D:\\projects\\data\\Susanna_sort\\3_Python_DW_Gym\\Susanna_video.mp4', 'D:\\projects\\data\\Susanna_sort\\3_Python_DW_Gym\\ДЗ_Soft Skills_Susanna.xlsx', 'D:\\projects\\data\\Susanna_sort\\3_Python_DW_Gym\\Предисловие.docx', 'D:\\projects\\data\\Susanna_sort\\3_Python_DW_Gym\\Чек-лист посозданию эффективного профиля в LinkedIn от GoIT.pdf', 'D:\\projects\\data\\Susanna_sort\\5_GoIT\\bootcamp.docx', 'D:\\projects\\data\\Susanna_sort\\5_GoIT\\Rasshifrovka-testa-DISC.pdf', 'D:\\projects\\data\\Susanna_sort\\5_GoIT\\Слава Панкратов - Черная книга менеджера (2010).pdf', 'D:\\projects\\data\\Susanna_sort\\5_GoIT\\Ссылка на рабочий кабинет https.docx', 'D:\\projects\\data\\Susanna_sort\\7_Team Lead\\DataWorkshop_DWgym_Pandas_certificate.pdf', 'D:\\projects\\data\\Susanna_sort\\7_Team Lead\\DataWorkshop_DWgym_Python_certificate.pdf', 'D:\\projects\\data\\Susanna_sort\\7_Team Lead\\DataWorkshop_DWthon_1_certificate.pdf', 'D:\\projects\\data\\Susanna_sort\\7_Team Lead\\DataWorkshop_ML_DS_course_certificate.pdf', 'D:\\projects\\data\\Susanna_sort\\7_Team Lead\\DataWorkshop_ML_Kaggle_certificate_flat.pdf', 'D:\\projects\\data\\Susanna_sort\\7_Team Lead\\DataWorkshop_ML_Kaggle_certificate_taiwan.pdf', 'D:\\projects\\data\\Susanna_sort\\7_Team Lead\\DataWorkshop_Python_DS_certificate.png', 'D:\\projects\\data\\Susanna_sort\\7_Team Lead\\DataWorkshop_Python_ML_certificate.png', 'D:\\projects\\data\\Susanna_sort\\7_Team Lead\\DataWorkshop_Python_ML_course_certificate.pdf', 'D:\\projects\\data\\Susanna_sort\\7_Team Lead\\DWthon_taiwan.png', 'D:\\projects\\data\\Susanna_sort\\7_Team Lead\\GoIT_English_certificate.png', 'D:\\projects\\data\\Susanna_sort\\7_Team Lead\\Sololearn_Python_Core.png', 'D:\\projects\\data\\Susanna_sort\\7_Team Lead\\Sololearn_Python_Data_Structures.png', 'D:\\projects\\data\\Susanna_sort\\7_Team Lead\\Sololearn_Python_Intermediate.png', 'D:\\projects\\data\\Susanna_sort\\7_Team Lead\\Sololearn_SQL.png', 'D:\\projects\\data\\Susanna_sort\\7_Team Lead\\Stratoplan_TeamLead101.pdf']
 
 
-def walk(path, prev_list_dir=[]):
+def walk(path, prev_list_dir=[], exclude=[]):
     os.chdir(path)
     list_files = list(filter(os.path.isfile, os.listdir()))
     list_files = [os.path.join(path, file) for file in list_files]
@@ -22,7 +22,8 @@ def walk(path, prev_list_dir=[]):
 
     for el in list_dir:
         list_dir.remove(el)
-        list_files.extend(walk(fr'{path}\{el}', list_dir))
+        if el not in exclude:
+            list_files.extend(walk(fr'{path}\{el}', list_dir))
     return list_files
 
 def file_type(file_path):
@@ -61,29 +62,29 @@ def on_rm_error( func, path, exc_info):
 
 
 def sorter(path):
-    files = walk(r'D:\projects\data\Susanna_sort')
+    new_folders = ['images', 'video', 'documents', 'music', 'archives', 'others']
+    files = walk(path=r'D:\projects\data\Susanna_sort', exclude=new_folders)
     rules = {'JPEG':'images\\', 'PNG':'images\\', 'JPG':'images\\', 'SVG':'images\\',
              'AVI':'video\\', 'MP4':'video\\', 'MOV':'video\\', 'MKV':'video\\',
              'DOC':'documents\\', 'DOCX':'documents\\', 'TXT':'documents\\', 'PDF':'documents\\', 'XLSX':'documents\\', 'PPTX':'documents\\',
              'MP3':'music\\', 'OGG':'music\\', 'WAV':'music\\', 'AMR':'music\\',
              'ZIP':'archives\\', 'GZ':'archives\\', 'TAR':'archives\\'}
 
-    new_folders =  ['images', 'video', 'documents', 'music', 'archives', 'others']
-    for folder in new_folders :
-        os.mkdir(os.path.join(path, folder))
+    for folder in new_folders:
+        new_path = os.path.join(path, folder)
+        if not os.path.exists(new_path):
+            os.mkdir(new_path)
 
     for f in files:
         f_type = file_type(file_path=f)
         if rules.get(f_type) == 'archives\\':
-            shutil.unpack_archive(f, os.path.join(path, 'archives\\'))
+            shutil.unpack_archive(f, os.path.join(path, 'archives\\', os.path.basename(f).rsplit(".", 1)[0]))
             os.remove(f)
         elif f_type in rules:
             new_file_path = os.path.join(path, rules[f_type], normalize(os.path.basename(f)))
-            #os.replace(f, new_file_path)
             shutil.move(f, new_file_path)
         else:
             new_file_path = os.path.join(path, 'others\\', normalize(os.path.basename(f)))
-            #os.replace(f, new_file_path)
             shutil.move(f, new_file_path)
 
 

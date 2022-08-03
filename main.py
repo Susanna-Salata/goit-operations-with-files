@@ -2,6 +2,10 @@ import os
 import shutil
 import re
 import stat
+import zipfile
+from threading import Thread
+from concurrent.futures import ThreadPoolExecutor, wait
+
 
 CYRILLIC_SYMBOLS = "абвгдеёжзийклмнопрстуфхцчшщъыьэюяєіїґАБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯЄІЇҐ"
 TRANSLATION = (
@@ -11,17 +15,27 @@ TRANSLATION = (
     "F", "H", "TS", "CH", "SH", "SCH", "", "Y", "", "E", "YU", "U", "JA", "JE", "JI", "G"
 )
 
+RULES = {'JPEG': 'images\\', 'PNG': 'images\\', 'JPG': 'images\\', 'SVG': 'images\\',
+         'AVI': 'video\\', 'MP4': 'video\\', 'MOV': 'video\\', 'MKV': 'video\\',
+         'DOC': 'documents\\', 'DOCX': 'documents\\', 'TXT': 'documents\\', 'PDF': 'documents\\', 'XLSX': 'documents\\',
+         'PPTX': 'documents\\',
+         'MP3': 'music\\', 'OGG': 'music\\', 'WAV': 'music\\', 'AMR': 'music\\',
+         'ZIP': 'archives\\', 'GZ': 'archives\\', 'TAR': 'archives\\'}
+
 
 def walk(path, prev_list_dir=[], exclude=[]):
     os.chdir(path)
     list_files = list(filter(os.path.isfile, os.listdir()))
     list_files = [os.path.join(path, file) for file in list_files]
     list_dir = list(filter(os.path.isdir, os.listdir()))
+    list_dir = [f for f in list_dir if f not in exclude]
+    sub_dirs = [fr'{path}\{el}' for el in list_dir]
+    n_dirs = len(list_dir)
 
-    for el in list_dir:
-        list_dir.remove(el)
-        if el not in exclude:
-            list_files.extend(walk(fr'{path}\{el}', list_dir))
+    with ThreadPoolExecutor() as executor:
+        new_list_files = executor.map(walk, sub_dirs, [list_dir]*n_dirs)
+
+    list_files += new_list_files
     return list_files
 
 
@@ -60,36 +74,36 @@ def on_rm_error( func, path, exc_info):
     os.unlink( path )
 
 
+def move_file(file_path, path):
+    f = file_path
+    f_type = file_type(file_path=f)
+    if RULES.get(f_type) == 'archives\\':
+        shutil.unpack_archive(f, os.path.join(path, 'archives\\', os.path.basename(f).rsplit(".", 1)[0]))
+        os.remove(f)
+    elif f_type in RULES:
+        new_file_path = os.path.join(path, RULES[f_type], normalize(os.path.basename(f)))
+        shutil.move(f, new_file_path)
+    else:
+        new_file_path = os.path.join(path, 'others\\', normalize(os.path.basename(f)))
+        shutil.move(f, new_file_path)
+
+
 def sorter(path):
     new_folders = ['images', 'video', 'documents', 'music', 'archives', 'others']
     files = walk(path=r'D:\projects\data\Susanna_sort', exclude=new_folders)
-    rules = {'JPEG':'images\\', 'PNG':'images\\', 'JPG':'images\\', 'SVG':'images\\',
-             'AVI':'video\\', 'MP4':'video\\', 'MOV':'video\\', 'MKV':'video\\',
-             'DOC':'documents\\', 'DOCX':'documents\\', 'TXT':'documents\\', 'PDF':'documents\\', 'XLSX':'documents\\', 'PPTX':'documents\\',
-             'MP3':'music\\', 'OGG':'music\\', 'WAV':'music\\', 'AMR':'music\\',
-             'ZIP':'archives\\', 'GZ':'archives\\', 'TAR':'archives\\'}
 
     for folder in new_folders:
         new_path = os.path.join(path, folder)
         if not os.path.exists(new_path):
             os.mkdir(new_path)
 
-    for f in files:
-        f_type = file_type(file_path=f)
-        if rules.get(f_type) == 'archives\\':
-            shutil.unpack_archive(f, os.path.join(path, 'archives\\', os.path.basename(f).rsplit(".", 1)[0]))
-            os.remove(f)
-        elif f_type in rules:
-            new_file_path = os.path.join(path, rules[f_type], normalize(os.path.basename(f)))
-            shutil.move(f, new_file_path)
-        else:
-            new_file_path = os.path.join(path, 'others\\', normalize(os.path.basename(f)))
-            shutil.move(f, new_file_path)
+    with ThreadPoolExecutor() as executor:
+        executor.map(move_file, files, [path]*len(files))
 
     list_dir = os.listdir(path)
     for folder in list_dir:
         if folder not in new_folders:
-            shutil.rmtree(os.path.join(path, folder), onerror = on_rm_error, ignore_errors=True)
+            shutil.rmtree(os.path.join(path, folder), onerror=on_rm_error, ignore_errors=True)
 
     list_types = []
     stats = {}
@@ -100,14 +114,19 @@ def sorter(path):
         stats.update({folder: list_files})
     print(f"Sorted files {stats}")
 
-    known_types = list(set([t for t in list_types if t in rules.keys()]))
-    unknown_types = list(set([t for t in list_types if t not in rules.keys()]))
+    known_types = list(set([t for t in list_types if t in RULES.keys()]))
+    unknown_types = list(set([t for t in list_types if t not in RULES.keys()]))
 
     print(f"Known file types: {known_types}")
     print(f"Unknown file types: {unknown_types}")
 
 
 if __name__ == '__main__':
+    dir_path = r'D:\projects\data\Susanna_sort'
+    shutil.rmtree(dir_path)
+    with zipfile.ZipFile(dir_path + '.zip', 'r') as zip_ref:
+        zip_ref.extractall(dir_path)
+
     sorter(r'D:\projects\data\Susanna_sort')
 
 
